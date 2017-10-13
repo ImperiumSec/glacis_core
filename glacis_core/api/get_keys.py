@@ -71,14 +71,19 @@ def get_keys(request):
 
     if cont:
         # look for EntityOnServer to match
-        target_eos = EntityOnServer.objects.filter(server_user=server_user).get()
-        #print("EOS %s" % target_eos )
-        if target_eos.named_key:
-            #print("named key lookup")
-            if target_eos.named_key.id == target_key.id:
-                #print("match")
-                key = target_eos.named_key
+        try:
+            target_eos = EntityOnServer.objects.filter(server_user=server_user).filter(named_key=target_key).get()
+            #print("EOS %s" % target_eos )
+            key = target_key
+        except Exception:
+            # FIXME: do a nicer exception
             
+            targets = EntityOnServer.objects.filter(server_user=server_user).filter(entity=target_key.owner)
+            if len(targets) > 0:
+                key = target_key
+            else:
+                raise Exception("Boom")
+
         else:
             key = Key.objects.filter(owner=target_eos.entity).filter(id=target_key.id).get()
         
